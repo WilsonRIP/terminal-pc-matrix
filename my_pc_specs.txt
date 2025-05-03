@@ -1,0 +1,212 @@
+[1;36m=== SYSTEM INFORMATION ===[0m
+[32mHostname[0m: Nokia-Laptop-Unreleased.local
+[32mOS[0m: Darwin 15.5
+[32mKernel[0m: 24.5.0
+[32mUptime[0m: 10 days, 0 hours, 58 minutes
+
+[1;36m=== MEMORY ===[0m
+[32mMemory Usage[0m: 18.86 GB / 32.00 GB (58.9%)
+[32mSwap Usage[0m: 1.40 GB / 3.00 GB (46.6%)
+
+[1;36m=== PROCESSORS ===[0m
+[32mCPU[0m 1: 1
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 2: 2
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 3: 3
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 4: 4
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 5: 5
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 6: 6
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 7: 7
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 8: 8
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 9: 9
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 10: 10
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 11: 11
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 12: 12
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 13: 13
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 14: 14
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 15: 15
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+[32mCPU[0m 16: 16
+  [33mBrand[0m: Intel(R) Core(TM) i9-9980HK CPU @ 2.40GHz
+  [33mFrequency[0m: 2400 MHz
+  [33mVendor ID[0m: GenuineIntel
+  [33mCores[0m: 8
+
+[1;36m=== DISKS ===[0m
+[32mDisk[0m: Macintosh HD ([3mFixed[0m)
+  [33mMount Point[0m: /
+  [33mFile System[0m: apfs
+  [33mSpace[0m: 427.83 GB / 862.41 GB (49.6%)
+[32mDisk[0m: Macintosh HD ([3mFixed[0m)
+  [33mMount Point[0m: /System/Volumes/Data
+  [33mFile System[0m: apfs
+  [33mSpace[0m: 427.83 GB / 862.41 GB (49.6%)
+[32mDisk[0m: BOOTCAMP ([3mFixed[0m)
+  [33mMount Point[0m: /Volumes/BOOTCAMP
+  [33mFile System[0m: ntfs
+  [33mSpace[0m: 0.09 GB / 69.14 GB (0.1%)
+
+[1;36m=== NETWORK INTERFACES ===[0m
+[32mInterface[0m: en5
+  [33mData Sent[0m: 1527 MB
+  [33mData Received[0m: 67 MB
+  [33mPackets Sent[0m: 602389
+  [33mPackets Received[0m: 793914
+[32mInterface[0m: ap1
+  [33mData Sent[0m: 5 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 15657
+  [33mPackets Received[0m: 0
+[32mInterface[0m: awdl0
+  [33mData Sent[0m: 2 MB
+  [33mData Received[0m: 76 MB
+  [33mPackets Sent[0m: 9573
+  [33mPackets Received[0m: 57280
+[32mInterface[0m: en1
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun0
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 1
+  [33mPackets Received[0m: 0
+[32mInterface[0m: en0
+  [33mData Sent[0m: 2778 MB
+  [33mData Received[0m: 986 MB
+  [33mPackets Sent[0m: 8135933
+  [33mPackets Received[0m: 26538197
+[32mInterface[0m: utun1
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 3
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun5
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 64
+  [33mPackets Received[0m: 48
+[32mInterface[0m: utun3
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 2
+  [33mPackets Received[0m: 0
+[32mInterface[0m: bridge0
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun7
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 4
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun6
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 4
+  [33mPackets Received[0m: 0
+[32mInterface[0m: en2
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: llw0
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: stf0
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: gif0
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun4
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 112
+  [33mPackets Received[0m: 88
+[32mInterface[0m: en3
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: en4
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 0
+  [33mPackets Received[0m: 0
+[32mInterface[0m: utun2
+  [33mData Sent[0m: 0 MB
+  [33mData Received[0m: 0 MB
+  [33mPackets Sent[0m: 3
+  [33mPackets Received[0m: 0
+[32mInterface[0m: lo0
+  [33mData Sent[0m: 1711 MB
+  [33mData Received[0m: 1711 MB
+  [33mPackets Sent[0m: 1298434
+  [33mPackets Received[0m: 1298434

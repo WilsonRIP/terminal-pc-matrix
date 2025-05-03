@@ -16,16 +16,21 @@ regex = "1.10.5"          # For batch renaming
 ring = "0.17.8"           # For hashing (duplicate finder)
 data-encoding = "2.6.0"   # For encoding hashes
 sysinfo = "0.30.13"        # For system info
-reqwest = { version = "0.12.4", features = ["json"] } # HTTP client
+reqwest = { version = "0.12.4", features = ["json", "stream"] } # HTTP client
 tokio = { version = "1.37.0", features = ["full"] }  # Async runtime
 serde_json = "1.0"         # Added for JSON handling
-# indicatif = "0.17.8"    # Optional: Add for progress bars
+indicatif = "0.17.8"      # Progress bars
+bytes = "1.5.0"           # For working with byte streams
 get_if_addrs = "0.5"
 dns-lookup = "2.0.4" # Fixed version
 du = "0.1.1" # Fixed version
 glob = "0.3.1"
 ignore = "0.4"
 anyhow      = { version = "1", features = ["std", "backtrace"] }  # ergonomic error handling
+meval = "0.2"
 color-eyre  = "0.6"      # pretty panic & error reports (optional but nice)
 futures = "0.3"          # For futures utilities
 ipnetwork = "0.20.0"     # For IP network calculations
+lazy_static = "1.4.0"    # For efficient static initialization
+rand = "0.8.5"           # For random number generation
+# whois-rust = "1.6.0"      # Not needed anymore, using direct TCP

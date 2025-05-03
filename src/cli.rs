@@ -1,5 +1,6 @@
 use clap::{Args, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
+use crate::unit_converter_ops::UnitConverterArgs;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -9,7 +10,7 @@ pub struct Cli {
     pub command: Option<Commands>, // Make the command optional for interactive mode
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// List files and directories in a specified path
     List {
@@ -75,9 +76,23 @@ pub enum Commands {
     DnsCache(DnsCacheArgs),
     /// Ping a host to check connectivity and response time
     Ping(PingArgs),
+    /// Perform unit conversions
+    Convert(UnitConverterArgs),
+    /// Perform a WHOIS lookup for a domain name
+    Whois(WhoisArgs),
+    /// Get IP address geographical and network information
+    IpInfo(IPInfoArgs),
+    /// Download a file from a URL with retries, resume support, and parallel connections
+    Download(DownloadArgs),
+    /// Download videos from platforms like YouTube, Vimeo, etc.
+    VideoDownload(VideoDownloadArgs),
+    /// Search and download images from the web
+    ImageDownload(ImageDownloadArgs),
+    /// Display system specifications and hardware information
+    PCSpecs(PCSpecsArgs),
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct RenameArgs {
     /// The target directory containing files to rename
     #[arg(short, long, default_value = ".")]
@@ -93,7 +108,7 @@ pub struct RenameArgs {
     pub dry_run: bool,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct SyncArgs {
     /// The source directory
     pub source: PathBuf,
@@ -107,7 +122,7 @@ pub struct SyncArgs {
     pub delete: bool,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct PortScanArgs {
     /// The target host (IP address or hostname) to scan
     pub host: String,
@@ -119,7 +134,7 @@ pub struct PortScanArgs {
     pub timeout: u64,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct HttpRequestArgs {
     /// HTTP method
     #[arg(short, long, value_parser = clap::value_parser!(String), default_value = "GET")]
@@ -134,14 +149,14 @@ pub struct HttpRequestArgs {
     pub headers: Vec<(String, String)>,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct DnsCacheArgs {
     /// Action to perform on the DNS cache
     #[arg(value_enum, default_value_t=DnsAction::Flush)]
     pub action: DnsAction,
 }
 
-#[derive(Args, Debug)]
+#[derive(Args, Debug, Clone)]
 pub struct PingArgs {
     /// The target host to ping (hostname or IP address)
     pub host: String,
@@ -156,6 +171,139 @@ pub enum DnsAction {
     Flush,
     // View (Difficult to implement reliably cross-platform, maybe add later)
     // View,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct WhoisArgs {
+    /// The domain name to lookup (e.g., google.com)
+    pub domain: String,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct IPInfoArgs {
+    /// IP address to lookup (e.g., 8.8.8.8)
+    pub ip: String,
+    
+    /// Include abuse contact information 
+    #[arg(short, long)]
+    pub abuse: bool,
+    
+    /// Show ASN (Autonomous System Number) information
+    #[arg(short = 'n', long)]
+    pub asn: bool,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct DownloadArgs {
+    /// URL of the file to download
+    pub url: String,
+    
+    /// Path where the file should be saved (defaults to filename from URL in current directory)
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+    
+    /// Number of retries if download fails
+    #[arg(short, long, default_value_t = 5)]
+    pub retries: usize,
+    
+    /// Resume download if the file already exists
+    #[arg(short, long)]
+    pub resume: bool,
+    
+    /// Number of parallel connections for downloading (set to 1 for single connection)
+    #[arg(short, long, default_value_t = 1)]
+    pub parallel: usize,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct VideoDownloadArgs {
+    /// URL of the video to download
+    pub url: String,
+    
+    /// Directory where the video should be saved (defaults to current directory)
+    #[arg(short, long)]
+    pub output_dir: Option<PathBuf>,
+    
+    /// Video quality (best, 1080p, 720p, 480p, lowest, audio-only)
+    #[arg(short, long)]
+    pub quality: Option<String>,
+    
+    /// Only download audio
+    #[arg(short, long)]
+    pub audio_only: bool,
+    
+    /// Only retrieve information about the video, don't download
+    #[arg(short = 'i', long)]
+    pub info_only: bool,
+    
+    /// Rate limit in bytes/s (e.g., 2M for 2MB/s)
+    #[arg(short = 'r', long = "rate-limit")]
+    pub rate_limit: Option<String>,
+    
+    /// Number of concurrent downloads for playlists (default: 3)
+    #[arg(short = 'j', long = "concurrent", default_value_t = 3)]
+    pub concurrent: usize,
+    
+    /// Download subtitles if available
+    #[arg(short = 's', long)]
+    pub subtitles: bool,
+    
+    /// Path to cookies file for authenticated downloads
+    #[arg(long = "cookies")]
+    pub cookies_file: Option<String>,
+    
+    /// Force IPv4 connections (can be faster on some networks)
+    #[arg(long = "ipv4")]
+    pub force_ipv4: bool,
+    
+    /// Proxy URL to use for downloads
+    #[arg(long = "proxy")]
+    pub proxy: Option<String>,
+    
+    /// Number of retries on failure
+    #[arg(long, default_value_t = 10)]
+    pub retries: usize,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct ImageDownloadArgs {
+    /// Search term for images
+    pub query: String,
+    
+    /// Number of images to download
+    #[arg(short, long, default_value_t = 10)]
+    pub count: usize,
+    
+    /// Directory where images should be saved (defaults to ./images)
+    #[arg(short, long)]
+    pub output_dir: Option<PathBuf>,
+    
+    /// Minimum width of images
+    #[arg(long)]
+    pub min_width: Option<u32>,
+    
+    /// Minimum height of images
+    #[arg(long)]
+    pub min_height: Option<u32>,
+    
+    /// Filter by color (e.g., red, green, blue, yellow, black, white)
+    #[arg(short, long)]
+    pub color: Option<String>,
+    
+    /// Disable safe search (safe search is enabled by default)
+    #[arg(long)]
+    pub unsafe_search: bool,
+    
+    /// Number of concurrent downloads
+    #[arg(short = 'j', long = "concurrent", default_value_t = 5)]
+    pub concurrent: usize,
+}
+
+#[derive(Args, Debug, Clone)]
+pub struct PCSpecsArgs {
+    /// Path to save system information (if not provided, information will be displayed on screen)
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
 }
 
 // --- Parsers for Clap --- 
