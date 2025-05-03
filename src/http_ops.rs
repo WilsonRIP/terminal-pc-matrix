@@ -10,7 +10,7 @@ pub async fn make_request(
     url: &str,
     body: Option<&str>,
     headers_map: &HashMap<String, String>,
-) -> Result<(), Box<dyn Error>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     println!(
         "{} {} {}",
         "Running:".cyan(),

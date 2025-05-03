@@ -3,14 +3,14 @@ use colored::*;
 use std::error::Error;
 use std::process::{Command, Output};
 
-pub async fn manage_dns(action: DnsAction) -> Result<(), Box<dyn Error>> {
+pub async fn manage_dns(action: DnsAction) -> Result<(), Box<dyn Error + Send + Sync>> {
     match action {
         DnsAction::Flush => flush_dns_cache(),
         // DnsAction::View => view_dns_cache(), // Placeholder if view is added later
     }
 }
 
-fn flush_dns_cache() -> Result<(), Box<dyn Error>> {
+fn flush_dns_cache() -> Result<(), Box<dyn Error + Send + Sync>> {
     println!("{}", "Attempting to flush DNS cache...".cyan());
     println!("{}", "Note: This operation usually requires administrator/sudo privileges.".yellow());
 
@@ -104,7 +104,7 @@ fn flush_dns_cache() -> Result<(), Box<dyn Error>> {
 }
 
 // Placeholder for viewing cache - complex and OS-specific
-// fn view_dns_cache() -> Result<(), Box<dyn Error>> {
+// fn view_dns_cache() -> Result<(), Box<dyn Error + Send + Sync>> {
 //     println!("{}", "Viewing DNS cache is not implemented yet.".yellow());
 //     Ok(())
 // } 

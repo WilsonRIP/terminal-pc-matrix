@@ -73,6 +73,8 @@ pub enum Commands {
     HttpRequest(HttpRequestArgs),
     /// Manage local DNS cache
     DnsCache(DnsCacheArgs),
+    /// Ping a host to check connectivity and response time
+    Ping(PingArgs),
 }
 
 #[derive(Args, Debug)]
@@ -137,6 +139,15 @@ pub struct DnsCacheArgs {
     /// Action to perform on the DNS cache
     #[arg(value_enum, default_value_t=DnsAction::Flush)]
     pub action: DnsAction,
+}
+
+#[derive(Args, Debug)]
+pub struct PingArgs {
+    /// The target host to ping (hostname or IP address)
+    pub host: String,
+    /// Number of ping packets to send
+    #[arg(short, long, default_value_t = 4)]
+    pub count: u32,
 }
 
 #[derive(ValueEnum, Clone, Debug, Copy)] // Add Copy

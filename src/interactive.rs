@@ -1,6 +1,6 @@
 use crate::cli::{RenameArgs, SyncArgs, PortScanArgs, DnsCacheArgs, DnsAction, parse_ports, parse_header};
 use crate::file_ops; // Assuming file_ops will contain the implementations
-use crate::browser_ops;
+use crate::browser_ops::{self, BrowserType, BrowserDataType};
 use crate::utils::prompt;
 use crate::network_ops;
 use crate::http_ops;
@@ -11,8 +11,10 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::collections::HashMap; // Needed for http headers
 
+type BoxedError = Box<dyn Error + Send + Sync>;
+
 // Function to run the interactive menu (now async)
-pub async fn run_interactive_mode() -> Result<(), Box<dyn Error>> {
+pub async fn run_interactive_mode() -> Result<(), BoxedError> {
     loop {
         println!("\n{}", "--- Options ---".magenta().bold());
         println!("  {} List files in a folder", "1.".cyan());
@@ -29,6 +31,9 @@ pub async fn run_interactive_mode() -> Result<(), Box<dyn Error>> {
         println!("  {} Scan Host Ports", "12.".cyan());
         println!("  {} Make HTTP Request", "13.".cyan());
         println!("  {} Flush DNS Cache", "14.".cyan());
+        println!("  {} Discover Network Devices", "15.".cyan());
+        println!("  {} Ping Host", "16.".cyan());
+        println!("  {} Browser Management", "17.".cyan());
         println!("  {} Quit", "q.".yellow());
 
         let choice = prompt(&"Choose an option".bold().to_string())?;
@@ -49,6 +54,9 @@ pub async fn run_interactive_mode() -> Result<(), Box<dyn Error>> {
             "12" => { handle_port_scan().await }
             "13" => { handle_http_request().await }
             "14" => { handle_dns_flush().await }
+            "15" => { handle_network_devices().await }
+            "16" => { handle_ping().await }
+            "17" => { handle_browser_management().await }
             "q" => {
                 println!("{}", "Exiting application.".yellow());
                 break; // Exit loop
@@ -74,14 +82,14 @@ pub async fn run_interactive_mode() -> Result<(), Box<dyn Error>> {
 }
 
 // Helper functions for interactive choices
-async fn handle_list() -> Result<(), Box<dyn Error>> {
+async fn handle_list() -> Result<(), BoxedError> {
     println!("{}", "List Directory".magenta());
     let path_str = prompt("Enter the folder path to list (default: .)")?;
     let path = if path_str.is_empty() { PathBuf::from(".") } else { PathBuf::from(path_str) };
     file_ops::list_directory(&path).map_err(|e| e.into())
 }
 
-async fn handle_backup() -> Result<(), Box<dyn Error>> {
+async fn handle_backup() -> Result<(), BoxedError> {
     println!("{}", "Backup Directory".magenta());
     let source_str = prompt("Enter the source folder path to backup")?;
     if source_str.is_empty() {
@@ -96,32 +104,37 @@ async fn handle_backup() -> Result<(), Box<dyn Error>> {
     file_ops::backup_directory(&source_path, &destination_path).map_err(|e| e.into())
 }
 
-async fn handle_close_browsers() -> Result<(), Box<dyn Error>> {
+async fn handle_close_browsers() -> Result<(), BoxedError> {
     println!("{}", "Close Browsers".magenta());
     browser_ops::close_browsers()
 }
 
-async fn handle_organize_screenshots() -> Result<(), Box<dyn Error>> {
+async fn handle_organize_screenshots() -> Result<(), BoxedError> {
     println!("{}", "Organize Screenshots".magenta());
     file_ops::organize_screenshots()
 }
 
-async fn handle_analyze_disk() -> Result<(), Box<dyn Error>> {
+async fn handle_analyze_disk() -> Result<(), BoxedError> {
     println!("{}", "Analyze Disk Usage".magenta());
-    let path_str = prompt("Enter the path to analyze (default: .)")?;
-    let path = if path_str.is_empty() { PathBuf::from(".") } else { PathBuf::from(path_str) };
-    let top_str = prompt("How many top items to show? (default: 10)")?;
+    let path_str = prompt("Enter directory path to analyze")?;
+    let path = if path_str.is_empty() { 
+        dirs::home_dir().unwrap_or_else(|| PathBuf::from("."))
+    } else {
+        PathBuf::from(path_str)
+    };
+    let top_str = prompt("Show top N files by size (default: 10)")?;
     let top = top_str.parse().unwrap_or(10);
     file_ops::analyze_disk(&path, top)
 }
 
-async fn handle_clean_system() -> Result<(), Box<dyn Error>> {
-    println!("{}", "Identify Temporary Files".magenta());
-    // println!("{}", "Running system clean identification (Dry Run)...".yellow());
+async fn handle_clean_system() -> Result<(), BoxedError> {
+    println!("{}", "Clean System Cache/Temporary Files".magenta());
+    let msg = "This is an EXPERIMENTAL feature that will show temporary and cache files."; 
+    println!("{} {}", "⚠️".yellow(), msg.yellow());
     file_ops::clean_system(true) // Always dry-run for now
 }
 
-async fn handle_rename() -> Result<(), Box<dyn Error>> {
+async fn handle_rename() -> Result<(), BoxedError> {
     println!("{}", "Batch Rename Files".magenta());
     let dir_str = prompt("Enter directory containing files to rename (default: .)")?;
     let pattern_str = prompt("Enter regex pattern to match filenames")?;
@@ -144,7 +157,7 @@ async fn handle_rename() -> Result<(), Box<dyn Error>> {
     file_ops::rename_files(&args)
 }
 
-async fn handle_find_duplicates() -> Result<(), Box<dyn Error>> {
+async fn handle_find_duplicates() -> Result<(), BoxedError> {
     println!("{}", "Find Duplicate Files".magenta());
     let path_str = prompt("Enter directory to search for duplicates (default: .)")?;
     let min_size_str = prompt("Enter minimum file size (e.g., 1k, default: 1k)")?;
@@ -155,7 +168,7 @@ async fn handle_find_duplicates() -> Result<(), Box<dyn Error>> {
     file_ops::find_duplicates(&path, &min_size)
 }
 
-async fn handle_sync_folders() -> Result<(), Box<dyn Error>> {
+async fn handle_sync_folders() -> Result<(), BoxedError> {
     println!("{}", "Sync Folders (One-Way)".magenta());
     let source_str = prompt("Enter the source directory")?;
     if source_str.is_empty() {
@@ -178,7 +191,7 @@ async fn handle_sync_folders() -> Result<(), Box<dyn Error>> {
      file_ops::sync_folders(&sync_args)
 }
 
-async fn handle_search_files() -> Result<(), Box<dyn Error>> {
+async fn handle_search_files() -> Result<(), BoxedError> {
     println!("{}", "Search Files".magenta());
     let path_str = prompt("Enter directory to search within (default: .)")?;
     let query_str = prompt("Enter filename pattern to search for")?;
@@ -193,12 +206,12 @@ async fn handle_search_files() -> Result<(), Box<dyn Error>> {
 
 // --- New Handler Functions (async) ---
 
-async fn handle_bandwidth() -> Result<(), Box<dyn Error>> {
+async fn handle_bandwidth() -> Result<(), BoxedError> {
     println!("{}", "Network Bandwidth Snapshot".magenta());
-    network_ops::get_bandwidth_snapshot().await
+    network_ops::get_bandwidth_snapshot().await.map_err(|e| anyhow::anyhow!("{}", e).into())
 }
 
-async fn handle_port_scan() -> Result<(), Box<dyn Error>> {
+async fn handle_port_scan() -> Result<(), BoxedError> {
     println!("{}", "Port Scanner".magenta());
     let host = prompt("Enter host IP or name to scan")?;
     if host.is_empty() {
@@ -210,10 +223,10 @@ async fn handle_port_scan() -> Result<(), Box<dyn Error>> {
     // For now, use a default timeout. Could add prompt later.
     let args = PortScanArgs { host, ports, timeout: 100 }; 
 
-    network_ops::scan_ports(&args.host, &args.ports, args.timeout).await
+    network_ops::scan_ports(&args.host, &args.ports, args.timeout).await.map_err(|e| anyhow::anyhow!("{}", e).into())
 }
 
-async fn handle_http_request() -> Result<(), Box<dyn Error>> {
+async fn handle_http_request() -> Result<(), BoxedError> {
     println!("{}", "HTTP Request Tool".magenta());
     let url = prompt("Enter URL")?;
     if url.is_empty() {
@@ -248,8 +261,119 @@ async fn handle_http_request() -> Result<(), Box<dyn Error>> {
 
 }
 
-async fn handle_dns_flush() -> Result<(), Box<dyn Error>> {
+async fn handle_dns_flush() -> Result<(), BoxedError> {
     println!("{}", "Flush DNS Cache".magenta());
     let args = DnsCacheArgs { action: DnsAction::Flush };
     dns_ops::manage_dns(args.action).await
+}
+
+// New handler for network device discovery
+async fn handle_network_devices() -> Result<(), BoxedError> {
+    println!("{}", "Network Device Discovery".magenta());
+    let timeout_str = prompt("Enter scan timeout in ms (default: 100)")?;
+    let timeout = timeout_str.parse().unwrap_or(100);
+    
+    network_ops::discover_network_devices(timeout).await.map_err(|e| anyhow::anyhow!("{}", e).into())
 } 
+
+// Handler for ping functionality
+async fn handle_ping() -> Result<(), BoxedError> {
+    println!("{}", "Ping Host".magenta());
+    let host = prompt("Enter hostname or IP address to ping")?;
+    if host.is_empty() {
+        return Err("Host cannot be empty.".into());
+    }
+    
+    let count_str = prompt("Number of ping packets to send (default: 4)")?;
+    let count = count_str.parse().unwrap_or(4);
+    
+    network_ops::ping_host(&host, count).await.map_err(|e| anyhow::anyhow!("{}", e).into())
+}
+
+// Handler for Browser Management
+async fn handle_browser_management() -> Result<(), BoxedError> {
+    println!("{}", "Browser Management".magenta());
+
+    // Choose browser
+    println!("Select browser:");
+    let browsers = [
+        (BrowserType::Chrome, "Chrome"),
+        (BrowserType::Firefox, "Firefox"),
+        (BrowserType::Edge, "Edge"),
+        (BrowserType::Brave, "Brave"),
+        (BrowserType::Safari, "Safari (macOS only)"),
+        (BrowserType::Opera, "Opera"),
+        (BrowserType::Vivaldi, "Vivaldi"),
+        // Add other supported browsers here
+    ];
+    for (i, (_, name)) in browsers.iter().enumerate() {
+        println!("  {}. {}", i + 1, name);
+    }
+    let browser_choice_str = prompt("Enter browser number")?;
+    let browser_idx: usize = browser_choice_str.parse().map_err(|_| "Invalid number")?;
+    if browser_idx == 0 || browser_idx > browsers.len() {
+        return Err("Invalid browser selection.".into());
+    }
+    let (selected_browser, browser_name) = browsers[browser_idx - 1].clone();
+
+    // Choose operation
+    println!("Select operation for {}:", browser_name.cyan());
+    let operations = [
+        (BrowserDataType::History, "Delete History"),
+        (BrowserDataType::Cookies, "Delete Cookies"),
+        (BrowserDataType::Bookmarks, "Export Bookmarks"),
+        (BrowserDataType::Passwords, "Export Passwords (experimental; Safari not supported)"),
+    ];
+    for (i, (_, name)) in operations.iter().enumerate() {
+        // Disable password export for Safari explicitly
+        if selected_browser == BrowserType::Safari && operations[i].0 == BrowserDataType::Passwords {
+             println!("  {}. {} {}", i + 1, name, "(Not Supported)".dimmed());
+        } else {
+            println!("  {}. {}", i + 1, name);
+        }
+    }
+    let op_choice_str = prompt("Enter operation number")?;
+    let op_idx: usize = op_choice_str.parse().map_err(|_| "Invalid number")?;
+    if op_idx == 0 || op_idx > operations.len() {
+        return Err("Invalid operation selection.".into());
+    }
+    let (selected_operation, _) = operations[op_idx - 1].clone();
+
+    // Prevent Safari password export attempt
+    if selected_browser == BrowserType::Safari && selected_operation == BrowserDataType::Passwords {
+        return Err("Password export is not supported for Safari.".into());
+    }
+
+    // Execute operation
+    println!("Performing {:?} on {:?}...", selected_operation, selected_browser);
+    match selected_operation {
+        BrowserDataType::History | BrowserDataType::Cookies => {
+            match browser_ops::delete_browser_data(selected_browser, selected_operation) {
+                Ok(result) => {
+                    if result.success {
+                        println!("{}", result.message.green());
+                    } else {
+                        // This case shouldn't happen if Ok is returned, but handle defensively
+                        eprintln!("{}: {}", "Operation reported non-success but no error".yellow(), result.message);
+                    }
+                },
+                Err(e) => eprintln!("{}: {}", "Error deleting data".red(), e),
+            }
+        }
+        BrowserDataType::Bookmarks | BrowserDataType::Passwords => {
+            match browser_ops::export_browser_data(selected_browser, selected_operation) {
+                Ok(result) => {
+                    if result.success {
+                        println!("{}", result.message.green());
+                    } else {
+                        // This case shouldn't happen if Ok is returned, but handle defensively
+                        eprintln!("{}: {}", "Operation reported non-success but no error".yellow(), result.message);
+                    }
+                },
+                Err(e) => eprintln!("{}: {}", "Error exporting data".red(), e),
+            }
+        }
+    }
+
+    Ok(())
+}

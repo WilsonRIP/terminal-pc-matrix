@@ -99,7 +99,7 @@ pub fn backup_directory(source: &Path, destination: &Path) -> Result<(), fs_extr
 
 // Function to organize screenshots on macOS Desktop
 #[cfg(target_os = "macos")]
-pub fn organize_screenshots() -> Result<(), Box<dyn std::error::Error>> {
+pub fn organize_screenshots() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{}", "Organizing macOS Desktop screenshots...".cyan());
     let desktop_dir = dirs::desktop_dir().ok_or("Desktop directory not found")?;
     let screenshots_dir = desktop_dir.join("Screenshots");
@@ -150,7 +150,7 @@ pub fn organize_screenshots() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 #[cfg(not(target_os = "macos"))]
-pub fn organize_screenshots() -> Result<(), Box<dyn std::error::Error>> {
+pub fn organize_screenshots() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     eprintln!("{}", "Organize screenshots is only supported on macOS.".yellow().bold());
     Err("Feature not supported on this OS".into())
 }
@@ -170,7 +170,7 @@ fn is_permission_error(entry: &Result<DirEntry, walkdir::Error>) -> bool {
 }
 
 // Function for disk analysis
-pub fn analyze_disk(path_to_analyze: &Path, top: usize) -> Result<(), Box<dyn std::error::Error>> {
+pub fn analyze_disk(path_to_analyze: &Path, top: usize) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{}", format!("Analyzing disk usage for '{}', showing top {}...", path_to_analyze.display(), top).cyan());
     let mut files: Vec<(u64, PathBuf)> = Vec::new();
     let mut error_count = 0;
@@ -232,7 +232,7 @@ pub fn calculate_dir_size(path: &Path) -> (u64, u32, u32) {
 }
 
 // Function for system cleaning (identify only for now)
-pub fn clean_system(dry_run: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn clean_system(dry_run: bool) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mode = if dry_run { "(Dry Run)".yellow() } else { "".normal() };
     println!("{} Identifying temporary/cache files {}...", "EXPERIMENTAL:".yellow().bold(), mode);
 
@@ -298,7 +298,7 @@ pub fn clean_system(dry_run: bool) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Batch Rename Files
-pub fn rename_files(args: &RenameArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub fn rename_files(args: &RenameArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mode = if args.dry_run { "(Dry Run)".yellow() } else { "".normal() };
     println!(
         "{} Batch Renaming in '{}' {}...",
@@ -420,11 +420,11 @@ fn hash_file(path: &Path) -> io::Result<Digest> {
 }
 
 // Find Duplicate Files
-pub fn find_duplicates(path_to_search: &Path, min_size_str: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let min_size = parse_size(min_size_str).map_err(|e| Box::<dyn std::error::Error>::from(format!("Invalid minimum size: {}", e)))?;
+pub fn find_duplicates(path_to_search: &Path, min_size_str: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    let min_size = parse_size(min_size_str).map_err(|e| Box::<dyn std::error::Error + Send + Sync>::from(format!("Invalid minimum size: {}", e)))?;
     println!(
-        "{} Finding duplicates in '{}' (min size: {})...",
-        "Running:".cyan(),
+        "{} Scanning '{}' for duplicate files larger than {}...",
+        "🔍".cyan(),
         path_to_search.display(),
         format_size(min_size, DECIMAL).yellow()
     );
@@ -511,7 +511,7 @@ pub fn find_duplicates(path_to_search: &Path, min_size_str: &str) -> Result<(), 
 }
 
 // Sync Folders (One-Way)
-pub fn sync_folders(args: &SyncArgs) -> Result<(), Box<dyn std::error::Error>> {
+pub fn sync_folders(args: &SyncArgs) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let mode = if args.dry_run { "(Dry Run)".yellow() } else { "".normal() };
     let delete_mode = if args.delete { " (with delete)".yellow() } else { "".normal() };
 
@@ -525,17 +525,17 @@ pub fn sync_folders(args: &SyncArgs) -> Result<(), Box<dyn std::error::Error>> {
     );
 
     if !args.source.is_dir() {
-        return Err(format!("Source '{}' is not a valid directory.", args.source.display()).red().bold().into());
+        return Err(anyhow::anyhow!("Source '{}' is not a valid directory.", args.source.display()).into());
     }
 
     if !args.dry_run && !args.destination.exists() {
         println!("Creating destination directory: {}", args.destination.display().to_string().yellow());
         if let Err(e) = fs::create_dir_all(&args.destination) {
-            return Err(format!("Failed to create destination directory '{}': {}", args.destination.display(), e).red().bold().into());
+            return Err(anyhow::anyhow!("Failed to create destination directory '{}': {}", args.destination.display(), e).into());
         }
         println!("Destination created: {}", args.destination.display().to_string().green());
     } else if !args.destination.is_dir() && args.destination.exists() {
-        return Err(format!("Destination '{}' exists but is not a directory.", args.destination.display()).red().bold().into());
+        return Err(anyhow::anyhow!("Destination '{}' exists but is not a directory.", args.destination.display()).into());
     }
 
     let mut copied_count = 0;
@@ -687,7 +687,7 @@ pub fn sync_folders(args: &SyncArgs) -> Result<(), Box<dyn std::error::Error>> {
 }
 
 // Search Files by Name
-pub fn search_files(path_to_search: &Path, query: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn search_files(path_to_search: &Path, query: &str) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!(
         "{} Searching for '{}' in '{}'...",
         "Running:".cyan(),

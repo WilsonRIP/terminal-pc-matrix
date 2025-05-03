@@ -15,8 +15,17 @@ humansize = "^2.1"
 regex = "1.10.5"          # For batch renaming
 ring = "0.17.8"           # For hashing (duplicate finder)
 data-encoding = "2.6.0"   # For encoding hashes
-sysinfo = { version = "^0.30.11", features = ["networks"] } # For network/system info
+sysinfo = "0.30.13"        # For system info
 reqwest = { version = "0.12.4", features = ["json"] } # HTTP client
 tokio = { version = "1.37.0", features = ["full"] }  # Async runtime
 serde_json = "1.0"         # Added for JSON handling
 # indicatif = "0.17.8"    # Optional: Add for progress bars
+get_if_addrs = "0.5"
+dns-lookup = "2.0.4" # Fixed version
+du = "0.1.1" # Fixed version
+glob = "0.3.1"
+ignore = "0.4"
+anyhow      = { version = "1", features = ["std", "backtrace"] }  # ergonomic error handling
+color-eyre  = "0.6"      # pretty panic & error reports (optional but nice)
+futures = "0.3"          # For futures utilities
+ipnetwork = "0.20.0"     # For IP network calculations
