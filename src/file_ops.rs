@@ -12,6 +12,16 @@ use ring::digest::{Context, Digest, SHA256};
 use data_encoding::HEXUPPER;
 use crate::cli::{RenameArgs, SyncArgs};
 
+// --- Struct for File Information (for UI) ---
+#[derive(Debug, Clone)] // Clone needed for potential data passing
+pub struct FileInfo {
+    pub name: String,
+    pub path: PathBuf,
+    pub file_type: String, // "Dir", "File", "Link/Other"
+    pub size_bytes: Option<u64>, // None for directories
+    pub size_human: String, // Formatted size string
+}
+
 // --- Existing File Ops ---
 
 // Function to list directory contents
@@ -723,4 +733,63 @@ pub fn search_files(path_to_search: &Path, query: &str) -> Result<(), Box<dyn st
     }
 
     Ok(())
+}
+
+// --- New Function for UI: Get Directory Listing ---
+pub fn get_directory_listing(path: &Path) -> Result<Vec<FileInfo>, io::Error> {
+    if !path.is_dir() {
+        return Err(io::Error::new(io::ErrorKind::NotADirectory, format!("Path '{}' is not a directory", path.display())));
+    }
+
+    let mut entries_info = Vec::new();
+    let mut entries_raw = Vec::new();
+    for entry_result in fs::read_dir(path)? {
+        match entry_result {
+            Ok(entry) => entries_raw.push(entry),
+            Err(e) => {
+                // Log or potentially bubble up specific entry errors if needed
+                eprintln!("Error reading entry: {}", e); 
+            }
+        }
+    }
+    // Sort alphabetically by name
+    entries_raw.sort_by_key(|dir_entry| dir_entry.file_name());
+
+    for entry in entries_raw {
+        let entry_path = entry.path();
+        let file_name_os = entry.file_name();
+        let file_name = file_name_os.to_string_lossy().to_string();
+        match fs::metadata(&entry_path) {
+            Ok(metadata) => {
+                let (file_type_str, size_bytes, size_human) = if metadata.is_dir() {
+                    ("Dir".to_string(), None, "-".to_string())
+                } else if metadata.is_file() {
+                    let bytes = metadata.len();
+                    ("File".to_string(), Some(bytes), format_size(bytes, DECIMAL))
+                } else {
+                    ("Link/Other".to_string(), None, "-".to_string())
+                };
+                
+                entries_info.push(FileInfo {
+                    name: file_name,
+                    path: entry_path,
+                    file_type: file_type_str,
+                    size_bytes,
+                    size_human,
+                });
+            }
+            Err(e) => {
+                // Could push an error entry or skip - skipping for now
+                eprintln!("Error accessing metadata for '{}': {}", file_name, e);
+                entries_info.push(FileInfo {
+                    name: format!("{} (Error)", file_name),
+                    path: entry_path, 
+                    file_type: "Error".to_string(),
+                    size_bytes: None,
+                    size_human: "-".to_string(),
+                });
+            }
+        }
+    }
+    Ok(entries_info)
 } 

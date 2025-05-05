@@ -15,9 +15,9 @@ humansize = "^2.1"
 regex = "1.10.5"          # For batch renaming
 ring = "0.17.8"           # For hashing (duplicate finder)
 data-encoding = "2.6.0"   # For encoding hashes
-sysinfo = "0.30.13"        # For system info
+sysinfo = "0.30.12"        # For system info
 reqwest = { version = "0.12.4", features = ["json", "stream"] } # HTTP client
-tokio = { version = "1.37.0", features = ["full"] }  # Async runtime
+tokio = { version = "1", features = ["full"] }  # Async runtime
 serde_json = "1.0"         # Added for JSON handling
 indicatif = "0.17.8"      # Progress bars
 bytes = "1.5.0"           # For working with byte streams
@@ -33,4 +33,17 @@ futures = "0.3"          # For futures utilities
 ipnetwork = "0.20.0"     # For IP network calculations
 lazy_static = "1.4.0"    # For efficient static initialization
 rand = "0.8.5"           # For random number generation
-# whois-rust = "1.6.0"      # Not needed anymore, using direct TCP
+crossterm = "0.27.0"
+gtk4 = { version = "0.8", features = ["v4_10"] }
+glib = "0.19"
+
+# Audio text extraction dependencies
+# simple_transcribe_rs = "1.0.3"  # Audio transcription using whisper-rs
+mime_guess = "2.0.4"           # For guessing MIME types
+chrono = "0.4"                 # For handling timestamps in transcripts
+tempfile = "3.10.1"            # For temporary file handling
+
+# whisper-rs = { git = "https://github.com/tazz4843/whisper-rs.git", rev = "53829a2" }
+
+[build-dependencies]
+# ... existing code ...

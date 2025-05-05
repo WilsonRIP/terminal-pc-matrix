@@ -241,4 +241,22 @@ fn format_size(size: u64) -> String {
     } else {
         format!("{} bytes", size)
     }
+}
+
+/// Get system information as a formatted String
+/// This version is suitable for GUI display where color codes are not needed.
+pub fn get_system_info_string() -> Result<String> {
+    let system_info = get_system_info()?;
+    // Use the Display implementation to format the string
+    Ok(format!("{}", system_info))
+}
+
+pub fn handle_pc_specs_command(args: crate::cli::PCSpecsArgs) -> anyhow::Result<()> {
+    if let Some(output_path) = args.output {
+        // Save to file
+        save_system_info_to_file(&output_path)
+    } else {
+        // Display to console
+        display_system_info()
+    }
 } 

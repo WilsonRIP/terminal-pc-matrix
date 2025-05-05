@@ -2,11 +2,9 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use colored::*;
 use anyhow::Result;
-use std::time::Duration;
 use std::fs;
 use indicatif::{ProgressBar, ProgressStyle};
 use walkdir::WalkDir;
-use lazy_static::lazy_static;
 
 /// Represents a virus scan result
 #[derive(Debug)]
@@ -118,6 +116,38 @@ pub fn scan_file(file_path: &Path) -> Result<ScanResult> {
     }
 }
 
+/// Parse the ClamAV output
+fn process_clamscan_output(stdout: &str, _stderr: &str) -> Vec<ScanResult> {
+    let mut results: Vec<ScanResult> = Vec::new();
+
+    for line in stdout.lines() {
+        if line.contains(": ") {
+            let parts: Vec<&str> = line.splitn(2, ": ").collect();
+            if parts.len() == 2 {
+                let file_path_str = parts[0];
+                let status_str = parts[1];
+                
+                let file_path = PathBuf::from(file_path_str);
+                
+                if status_str == "OK" {
+                    results.push(ScanResult {
+                        path: file_path,
+                        status: ScanStatus::Clean,
+                        threat_name: None,
+                    });
+                } else {
+                    results.push(ScanResult {
+                        path: file_path,
+                        status: ScanStatus::Infected,
+                        threat_name: Some(status_str.to_string()),
+                    });
+                }
+            }
+        }
+    }
+    results
+}
+
 /// Scan a directory for viruses
 pub fn scan_directory(dir_path: &Path, recursive: bool) -> Result<Vec<ScanResult>> {
     if !dir_path.exists() || !dir_path.is_dir() {
@@ -126,7 +156,7 @@ pub fn scan_directory(dir_path: &Path, recursive: bool) -> Result<Vec<ScanResult
     
     println!("{} {}", "Scanning directory:".cyan(), dir_path.display());
     
-    let mut results = Vec::new();
+    let mut results: Vec<ScanResult> = Vec::new();
     let mut file_count = 0;
     
     // Count files first for progress bar
@@ -158,36 +188,16 @@ pub fn scan_directory(dir_path: &Path, recursive: bool) -> Result<Vec<ScanResult
     // Process the output
     let stdout = String::from_utf8_lossy(&output.stdout).to_string();
     let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-    
-    // Parse the ClamAV output
-    for line in stdout.lines() {
-        if line.contains(": ") {
-            let parts: Vec<&str> = line.splitn(2, ": ").collect();
-            if parts.len() == 2 {
-                let file_path_str = parts[0];
-                let status_str = parts[1];
-                
-                let file_path = PathBuf::from(file_path_str);
-                
-                if status_str == "OK" {
-                    results.push(ScanResult {
-                        path: file_path,
-                        status: ScanStatus::Clean,
-                        threat_name: None,
-                    });
-                } else {
-                    results.push(ScanResult {
-                        path: file_path,
-                        status: ScanStatus::Infected,
-                        threat_name: Some(status_str.to_string()),
-                    });
-                }
-                
-                pb.inc(1);
-            }
-        }
-    }
-    
+
+    results = process_clamscan_output(&stdout, &stderr);
+
+    // Update progress bar based on parsed results (or file count if parsing fails)
+    let file_count = results.len();
+    let pb = ProgressBar::new(file_count as u64); 
+    pb.set_style(ProgressStyle::default_bar()
+        .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {pos}/{len} files ({eta})")
+        .unwrap()
+        .progress_chars("#>-="));
     pb.finish_with_message("Scan complete".green().to_string());
     
     Ok(results)
@@ -250,4 +260,18 @@ pub fn quarantine_file(file_path: &Path, quarantine_dir: &Path) -> Result<PathBu
     fs::rename(file_path, &quarantine_file)?;
     
     Ok(quarantine_file)
+}
+
+fn run_clamscan_command(args: &[&str]) -> Result<String> {
+    let output = Command::new("clamscan")
+        .args(args)
+        .output()?;
+
+    if output.status.success() || output.status.code() == Some(1) {
+        let result = String::from_utf8_lossy(&output.stdout).to_string();
+        Ok(result)
+    } else {
+        let error = String::from_utf8_lossy(&output.stderr).to_string();
+        Err(anyhow::anyhow!("clamscan error: {}", error))
+    }
 } 

@@ -3,8 +3,8 @@ use std::process::Command;
 use std::path::{Path, PathBuf};
 use std::fs;
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::env;
 use glob::glob;
+use dirs;
 
 // Browser profile locations
 #[derive(Debug, Clone, PartialEq)]
@@ -46,7 +46,7 @@ pub struct BrowserOpResult {
 pub fn close_browsers() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("{}", "Attempting to close browsers on macOS…".cyan());
 
-    // macOS uses the Bundle name that appears in “Activity Monitor”
+    // macOS uses the Bundle name that appears in "Activity Monitor"
     let browsers = [
         "Safari",
         "Google Chrome",
@@ -137,7 +137,7 @@ pub fn close_browsers() -> Result<(), Box<dyn std::error::Error + Send + Sync>> 
                 println!("{} Closed {}", "✓".green(), browser.green());
             }
             Ok(status) if status.code() == Some(128) || status.code() == Some(1) => {
-                // 128 (or 1) → “process not found”
+                // 128 (or 1) → "process not found"
                 println!("  {} was not running.", browser.dimmed());
             }
             Ok(status) => {
@@ -244,19 +244,19 @@ pub fn close_browsers() -> Result<(), Box<dyn std::error::Error + Send + Sync>> 
 /// Returns the default profile directory for a given browser based on the OS.
 /// Note: For Firefox, it attempts to find the *.default* or *.default-release* profile.
 fn get_profile_dir(browser: BrowserType) -> Option<PathBuf> {
-    let home_dir = env::var_os("HOME").or_else(|| env::var_os("USERPROFILE"))?;
-    let home = PathBuf::from(home_dir);
+    let _home_dir = dirs::home_dir()?;
+    // let home = PathBuf::from(home_dir); // Variable is unused
 
     #[cfg(target_os = "macos")]
     {
-        let app_support = home.join("Library/Application Support");
+        let app_support = _home_dir.join("Library/Application Support");
         match browser {
             BrowserType::Chrome => Some(app_support.join("Google/Chrome/Default")),
             BrowserType::Firefox => {
                 let profiles_path = app_support.join("Firefox/Profiles");
                 find_firefox_profile_dir(&profiles_path)
             }
-            BrowserType::Safari => Some(home.join("Library/Safari")),
+            BrowserType::Safari => Some(_home_dir.join("Library/Safari")),
             BrowserType::Edge => Some(app_support.join("Microsoft Edge/Default")),
             BrowserType::Brave => Some(app_support.join("BraveSoftware/Brave-Browser/Default")),
             BrowserType::Opera => Some(app_support.join("com.operasoftware.Opera")),
@@ -266,11 +266,11 @@ fn get_profile_dir(browser: BrowserType) -> Option<PathBuf> {
     }
     #[cfg(target_os = "linux")]
     {
-        let config_dir = home.join(".config");
+        let config_dir = _home_dir.join(".config");
         match browser {
             BrowserType::Chrome => Some(config_dir.join("google-chrome/Default")),
             BrowserType::Firefox => {
-                let profiles_path = home.join(".mozilla/firefox");
+                let profiles_path = _home_dir.join(".mozilla/firefox");
                 find_firefox_profile_dir(&profiles_path)
             }
             BrowserType::Edge => Some(config_dir.join("microsoft-edge/Default")),
@@ -283,8 +283,8 @@ fn get_profile_dir(browser: BrowserType) -> Option<PathBuf> {
     }
     #[cfg(target_os = "windows")]
     {
-        let local_app_data = env::var_os("LOCALAPPDATA").map(PathBuf::from)?;
-        let app_data = env::var_os("APPDATA").map(PathBuf::from)?;
+        let local_app_data = dirs::data_local_dir()?;
+        let app_data = dirs::data_local_dir()?;
         match browser {
             BrowserType::Chrome => Some(local_app_data.join("Google/Chrome/User Data/Default")),
             BrowserType::Firefox => {

@@ -19,6 +19,8 @@ mod video_download_ops;
 mod image_download_ops;
 mod antivirus_ops;
 mod pc_specs_ops;
+// mod audio_text_ops; // Temporarily disabled
+mod ui;
 
 use clap::Parser;
 use colored::*;
@@ -203,22 +205,39 @@ async fn async_main() -> anyhow::Result<()> {
 
         // ─────────────────────────────── PC SPECS ────────────────────────────
         Some(Commands::PCSpecs(args)) => {
-            if let Some(output_path) = args.output {
-                // Save to file
-                if let Err(e) = pc_specs_ops::save_system_info_to_file(&output_path) {
-                    eprintln!("Error saving system information: {}", e);
-                }
-            } else {
-                // Display on screen
-                if let Err(e) = pc_specs_ops::display_system_info() {
-                    eprintln!("Error displaying system information: {}", e);
-                }
+            if let Err(e) = pc_specs_ops::handle_pc_specs_command(args) {
+                eprintln!("Error getting PC specs: {}", e);
             }
         }
 
-        // ─────────────────────────────── INTERACTIVE ────────────────────────────
-        None                                                => interactive::run_interactive_mode().await.map_err(|e| anyhow::anyhow!("{}", e))?,
+        // ─────────────────────────────── INTERACTIVE MODE / GUI MODE ────────────────────────────
+        None => {
+            // No arguments provided, run the GTK UI
+            println!("No command-line arguments provided. Launching GUI...");
+            match ui::run_app() {
+                Ok(exit_code) => {
+                    // The application finished successfully, exit with its code
+                    std::process::exit(exit_code.value());
+                }
+                Err(e) => {
+                    // Handle potential errors from launching the app itself, if run_app were to return Result
+                    eprintln!("Failed to run GTK app: {}", e);
+                    std::process::exit(1); // Exit with a generic error code
+                }
+            }
+        }
     }
 
     Ok(())
 }
+
+/* Temporarily disabled
+// Handle audio transcription logic
+pub async fn handle_audio_transcription(
+    input_path: &PathBuf,
+    options: audio_text_ops::TranscriptionOptions,
+) -> Result<(), anyhow::Error> {
+    // Use the module to handle the actual transcription
+    audio_text_ops::transcribe_audio(input_path, options).await
+}
+*/

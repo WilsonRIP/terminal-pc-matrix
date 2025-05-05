@@ -13,16 +13,20 @@ use crate::video_download_ops;
 use crate::image_download_ops;
 use crate::antivirus_ops;
 use crate::pc_specs_ops;
+use crate::audio_text_ops;
 
 use colored::*;
 use std::error::Error;
 use std::path::PathBuf;
 use std::collections::HashMap; // Needed for http headers
+use std::io::{self}; // Remove Write
+use anyhow::{anyhow, Result}; // Add anyhow macro import
+use clap::{Arg, ArgAction, Command as ClapCommand};
 
 type BoxedError = Box<dyn Error + Send + Sync>;
 
 // Function to run the interactive menu (now async)
-pub async fn run_interactive_mode() -> Result<(), BoxedError> {
+pub async fn start_interactive_mode() -> Result<(), BoxedError> {
     loop {
         println!("\n{}", "--- Options ---".magenta().bold());
         println!("  {} List files in a folder", "1.".cyan());
@@ -50,6 +54,7 @@ pub async fn run_interactive_mode() -> Result<(), BoxedError> {
         println!("  {} Image Downloader", "23.".cyan());
         println!("  {} Antivirus Scanner", "24.".cyan());
         println!("  {} PC Specs", "25.".cyan());
+        println!("  {} Audio Transcribe", "26.".cyan());
         println!("  {} Quit", "q.".yellow());
 
         let choice = prompt(&"Choose an option".bold().to_string())?;
@@ -81,6 +86,7 @@ pub async fn run_interactive_mode() -> Result<(), BoxedError> {
             "23" => { handle_image_download().await }
             "24" => { handle_antivirus().await }
             "25" => { handle_pc_specs().await }
+            "26" => { handle_audio_transcribe().await.map_err(|e| format!("{}", e)) }
             "q" => {
                 println!("{}", "Exiting application.".yellow());
                 break; // Exit loop
@@ -232,7 +238,7 @@ async fn handle_search_files() -> Result<(), BoxedError> {
 
 async fn handle_bandwidth() -> Result<(), BoxedError> {
     println!("{}", "Network Bandwidth Snapshot".magenta());
-    network_ops::get_bandwidth_snapshot().await.map_err(|e| anyhow::anyhow!("{}", e).into())
+    network_ops::get_bandwidth_snapshot().await.map_err(|e| anyhow!("{}", e).into())
 }
 
 async fn handle_port_scan() -> Result<(), BoxedError> {
@@ -247,7 +253,7 @@ async fn handle_port_scan() -> Result<(), BoxedError> {
     // For now, use a default timeout. Could add prompt later.
     let args = PortScanArgs { host, ports, timeout: 100 }; 
 
-    network_ops::scan_ports(&args.host, &args.ports, args.timeout).await.map_err(|e| anyhow::anyhow!("{}", e).into())
+    network_ops::scan_ports(&args.host, &args.ports, args.timeout).await.map_err(|e| anyhow!("{}", e).into())
 }
 
 async fn handle_http_request() -> Result<(), BoxedError> {
@@ -297,7 +303,7 @@ async fn handle_network_devices() -> Result<(), BoxedError> {
     let timeout_str = prompt("Enter scan timeout in ms (default: 100)")?;
     let timeout = timeout_str.parse().unwrap_or(100);
     
-    network_ops::discover_network_devices(timeout).await.map_err(|e| anyhow::anyhow!("{}", e).into())
+    network_ops::discover_network_devices(timeout).await.map_err(|e| anyhow!("{}", e).into())
 } 
 
 // Handler for ping functionality
@@ -311,7 +317,7 @@ async fn handle_ping() -> Result<(), BoxedError> {
     let count_str = prompt("Number of ping packets to send (default: 4)")?;
     let count = count_str.parse().unwrap_or(4);
     
-    network_ops::ping_host(&host, count).await.map_err(|e| anyhow::anyhow!("{}", e).into())
+    network_ops::ping_host(&host, count).await.map_err(|e| anyhow!("{}", e).into())
 }
 
 // Handler for Browser Management
@@ -436,7 +442,7 @@ async fn handle_whois_lookup() -> Result<(), BoxedError> {
             println!("{}", result);
             Ok(())
         },
-        Err(e) => Err(anyhow::anyhow!("WHOIS lookup failed: {}", e).into())
+        Err(e) => Err(anyhow!("WHOIS lookup failed: {}", e).into())
     }
 }
 
@@ -454,7 +460,7 @@ async fn handle_ip_info() -> Result<(), BoxedError> {
     let show_asn_str = prompt("Show ASN information? (yes/no, default: no)")?;
     let show_asn = show_asn_str.trim().eq_ignore_ascii_case("yes");
     
-    ip_info_ops::lookup_ip_info(&ip, show_abuse, show_asn).await.map_err(|e| anyhow::anyhow!("IP info lookup failed: {}", e).into())
+    ip_info_ops::lookup_ip_info(&ip, show_abuse, show_asn).await.map_err(|e| anyhow!("IP info lookup failed: {}", e).into())
 }
 
 // Handler for File Download
@@ -491,7 +497,7 @@ async fn handle_file_download() -> Result<(), BoxedError> {
     let parallel_str = prompt("Number of parallel connections (default: 1)")?;
     let parallel = parallel_str.parse().unwrap_or(1);
     
-    file_download_ops::download_file(&url, &output_path, retries, resume, parallel).await.map_err(|e| anyhow::anyhow!("Download failed: {}", e).into())
+    file_download_ops::download_file(&url, &output_path, retries, resume, parallel).await.map_err(|e| anyhow!("Download failed: {}", e).into())
 }
 
 // Handler for Video Download
@@ -522,7 +528,7 @@ async fn handle_video_download() -> Result<(), BoxedError> {
                 println!("\n{}", "Video Information:".cyan().bold());
                 println!("{}", info);
             },
-            Err(e) => return Err(anyhow::anyhow!("Failed to get video info: {}", e).into()),
+            Err(e) => return Err(anyhow!("Failed to get video info: {}", e).into()),
         }
         return Ok(());
     }
@@ -630,7 +636,7 @@ async fn handle_video_download() -> Result<(), BoxedError> {
             println!("{}", "Video downloaded successfully.".green());
             Ok(())
         },
-        Err(e) => Err(anyhow::anyhow!("Video download failed: {}", e).into()),
+        Err(e) => Err(anyhow!("Video download failed: {}", e).into()),
     }
 }
 
@@ -750,10 +756,10 @@ async fn handle_image_download() -> Result<(), BoxedError> {
                     println!("\n{}", "Images downloaded successfully.".green());
                     Ok(())
                 },
-                Err(e) => Err(anyhow::anyhow!("Image download failed: {}", e).into()),
+                Err(e) => Err(anyhow!("Image download failed: {}", e).into()),
             }
         },
-        Err(e) => Err(anyhow::anyhow!("Image search failed: {}", e).into()),
+        Err(e) => Err(anyhow!("Image search failed: {}", e).into()),
     }
 }
 
@@ -898,7 +904,7 @@ async fn handle_pc_specs() -> Result<(), BoxedError> {
     
     match option.as_str() {
         "1" => {
-            pc_specs_ops::display_system_info().map_err(|e| anyhow::anyhow!("{}", e).into())
+            pc_specs_ops::display_system_info().map_err(|e| anyhow!("{}", e).into())
         },
         "2" => {
             let file_path = prompt("Enter file path to save PC specs (default: pc_specs.txt)")?;
@@ -908,10 +914,93 @@ async fn handle_pc_specs() -> Result<(), BoxedError> {
                 PathBuf::from(file_path)
             };
             
-            pc_specs_ops::save_system_info_to_file(&path).map_err(|e| anyhow::anyhow!("{}", e).into())
+            pc_specs_ops::save_system_info_to_file(&path).map_err(|e| anyhow!("{}", e).into())
         },
         _ => {
             Err("Invalid option.".into())
         }
     }
+}
+
+// Add this function to handle the audio transcribe menu option
+async fn handle_audio_transcribe() -> Result<(), String> {
+    println!("{}", "===== Audio Transcription =====".magenta().bold());
+    
+    // Get file path
+    println!("Enter the path to the audio or video file:");
+    let file_path = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    if file_path.trim().is_empty() {
+        return Err("File path cannot be empty".to_string());
+    }
+    
+    // Model size
+    println!("Select model size (default: base):");
+    println!("1. Tiny (fastest, least accurate)");
+    println!("2. Base (default)");
+    println!("3. Small");
+    println!("4. Medium");
+    println!("5. Large (slowest, most accurate)");
+    let model_choice = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    
+    let model_size = match model_choice.trim() {
+        "1" => audio_text_ops::ModelSize::Tiny,
+        "2" | "" => audio_text_ops::ModelSize::Base,
+        "3" => audio_text_ops::ModelSize::Small,
+        "4" => audio_text_ops::ModelSize::Medium,
+        "5" => audio_text_ops::ModelSize::Large,
+        _ => audio_text_ops::ModelSize::Base,
+    };
+    
+    // Output path
+    println!("Enter output file path (leave empty for default):");
+    let output_path_str = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    let output_path = if output_path_str.trim().is_empty() {
+        None
+    } else {
+        Some(std::path::PathBuf::from(output_path_str.trim()))
+    };
+    
+    // Output formats
+    println!("Generate SRT subtitle file? (Y/n):");
+    let srt_choice = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    let srt_output = !srt_choice.trim().to_lowercase().starts_with('n');
+    
+    println!("Generate TXT transcript file? (Y/n):");
+    let txt_choice = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    let txt_output = !txt_choice.trim().to_lowercase().starts_with('n');
+    
+    println!("Include timestamps in transcript? (Y/n):");
+    let timestamps_choice = read_line().map_err(|e| format!("Failed to read input: {}", e))?;
+    let include_timestamps = !timestamps_choice.trim().to_lowercase().starts_with('n');
+    
+    // Create options
+    let options = audio_text_ops::TranscriptionOptions {
+        model_size,
+        output_file: output_path,
+        save_timestamps: include_timestamps,
+        output_srt: srt_output,
+        output_txt: txt_output,
+    };
+    
+    // Perform transcription
+    let input_path = std::path::PathBuf::from(file_path.trim());
+    
+    println!("{}", "Starting transcription process...".cyan());
+    match audio_text_ops::handle_audio_transcription(&input_path, options).await {
+        Ok(transcript) => {
+            println!("{}", "Transcription completed successfully.".green());
+            Ok(())
+        },
+        Err(e) => {
+            println!("{} {}", "Error:".red(), e);
+            Err(format!("Transcription failed: {}", e))
+        }
+    }
+}
+
+// Helper function to read a line from stdin
+fn read_line() -> io::Result<String> {
+    let mut buffer = String::new();
+    io::stdin().read_line(&mut buffer)?;
+    Ok(buffer.trim().to_string())
 }

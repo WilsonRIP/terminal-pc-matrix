@@ -90,6 +90,8 @@ pub enum Commands {
     ImageDownload(ImageDownloadArgs),
     /// Display system specifications and hardware information
     PCSpecs(PCSpecsArgs),
+    // /// Transcribe audio from files (or extract audio from videos) to text
+    // AudioTranscribe(AudioTranscribeArgs),
 }
 
 #[derive(Args, Debug, Clone)]
